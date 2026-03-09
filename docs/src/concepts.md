@@ -2,7 +2,7 @@
 
 ## Image Hashing
 
-rsimagetag identifies images by their content hash rather than their file path. When you open an image, the application computes a cryptographic hash of the image data. This hash serves as the unique identifier for that image in the database.
+rsimagetag identifies images by their content hash rather than their file path. When you open an image, the application computes a SHA-256 hash of the file data. This hash serves as the unique identifier for that image in the database.
 
 Benefits:
 
@@ -26,9 +26,17 @@ There is no enforced distinction between people and scene tags — they are all 
 
 ## Database
 
-The database is a simple key-value store:
+The database is an embedded [redb](https://github.com/cberner/redb) key-value store located at `~/.config/rsimagetag/tags.redb`.
 
-- **Key**: The content hash of the image (e.g., SHA-256)
-- **Value**: A list of tags associated with that image
+- **Key**: The SHA-256 content hash of the image (hex string)
+- **Value**: A JSON-encoded list of tags associated with that image
 
-The database is stored locally and persists between sessions.
+The database must be initialized before first use:
+
+```bash
+rsimagetag init-db
+```
+
+This creates the `~/.config/rsimagetag/` directory and the `tags.redb` database file.
+
+The database is ACID-compliant — tags are never lost due to crashes or power failures.

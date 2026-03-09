@@ -23,12 +23,26 @@ fn main() -> eframe::Result {
                 Box::new(move |_cc| Ok(Box::new(app))),
             )
         }
+        Commands::InitDb => {
+            if let Err(e) = rsimagetag::db::init_db() {
+                eprintln!("Error: {e}");
+                std::process::exit(1);
+            }
+            Ok(())
+        }
         Commands::Complete { shell } => {
             print_completions(shell);
             Ok(())
         }
         Commands::Version => {
-            println!("rsimagetag {}", env!("CARGO_PKG_VERSION"));
+            println!("rsimagetag {} by {}", env!("CARGO_PKG_VERSION"), env!("CARGO_PKG_AUTHORS"));
+            println!("GIT_DESCRIBE: {}", env!("GIT_DESCRIBE"));
+            println!("GIT_SHA: {}", env!("GIT_SHA"));
+            println!("GIT_BRANCH: {}", env!("GIT_BRANCH"));
+            println!("GIT_DIRTY: {}", env!("GIT_DIRTY"));
+            println!("RUSTC_SEMVER: {}", env!("RUSTC_SEMVER"));
+            println!("RUST_EDITION: {}", env!("RUST_EDITION"));
+            println!("BUILD_TIMESTAMP: {}", env!("BUILD_TIMESTAMP"));
             Ok(())
         }
     }

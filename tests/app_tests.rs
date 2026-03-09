@@ -2,6 +2,7 @@ use std::path::Path;
 use clap::Parser;
 use rsimagetag::{scan_images, MyApp};
 use rsimagetag::cli::Cli;
+use rsimagetag::db;
 
 #[test]
 fn test_scan_images_empty_dir() {
@@ -167,4 +168,33 @@ fn test_cli_parse_version() {
 fn test_cli_parse_complete() {
     let cli = Cli::parse_from(["rsimagetag", "complete", "bash"]);
     assert!(matches!(cli.command, rsimagetag::cli::Commands::Complete { .. }));
+}
+
+#[test]
+fn test_cli_parse_init_db() {
+    let cli = Cli::parse_from(["rsimagetag", "init-db"]);
+    assert!(matches!(cli.command, rsimagetag::cli::Commands::InitDb));
+}
+
+#[test]
+fn test_hash_file_deterministic() {
+    let path = std::env::temp_dir().join("rsimagetag_test_hash_det.bin");
+    std::fs::write(&path, b"deterministic content").unwrap();
+    let h1 = db::hash_file(&path).unwrap();
+    let h2 = db::hash_file(&path).unwrap();
+    assert_eq!(h1, h2);
+    assert_eq!(h1.len(), 64); // SHA-256 hex is 64 chars
+    std::fs::remove_file(&path).ok();
+}
+
+#[test]
+fn test_config_dir_exists() {
+    let dir = db::config_dir();
+    assert!(dir.ends_with("rsimagetag"));
+}
+
+#[test]
+fn test_db_path_exists() {
+    let path = db::db_path();
+    assert!(path.ends_with("tags.redb"));
 }

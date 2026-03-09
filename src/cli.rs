@@ -20,6 +20,8 @@ pub enum Commands {
         #[arg(short, long)]
         dir: Option<String>,
     },
+    /// Initialize the tag database at ~/.config/rsimagetag/
+    InitDb,
     /// Generate shell completion scripts
     Complete {
         /// The shell to generate completions for
