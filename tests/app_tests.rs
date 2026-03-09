@@ -1,5 +1,7 @@
 use std::path::Path;
+use clap::Parser;
 use rsimagetag::{scan_images, MyApp};
+use rsimagetag::cli::Cli;
 
 #[test]
 fn test_scan_images_empty_dir() {
@@ -127,4 +129,42 @@ fn test_current_path_empty() {
         texture: None,
     };
     assert!(app.current_path().is_none());
+}
+
+#[test]
+fn test_with_dir() {
+    let dir = std::env::temp_dir().join("rsimagetag_test_with_dir");
+    std::fs::create_dir_all(&dir).unwrap();
+    std::fs::write(dir.join("x.jpg"), b"fake").unwrap();
+    let app = MyApp::with_dir(&dir);
+    assert_eq!(app.image_count(), 1);
+    std::fs::remove_dir_all(&dir).ok();
+}
+
+#[test]
+fn test_cli_parse_tag() {
+    let cli = Cli::parse_from(["rsimagetag", "tag"]);
+    assert!(matches!(cli.command, rsimagetag::cli::Commands::Tag { dir: None }));
+}
+
+#[test]
+fn test_cli_parse_tag_with_dir() {
+    let cli = Cli::parse_from(["rsimagetag", "tag", "--dir", "/tmp"]);
+    if let rsimagetag::cli::Commands::Tag { dir } = cli.command {
+        assert_eq!(dir.unwrap(), "/tmp");
+    } else {
+        panic!("expected Tag command");
+    }
+}
+
+#[test]
+fn test_cli_parse_version() {
+    let cli = Cli::parse_from(["rsimagetag", "version"]);
+    assert!(matches!(cli.command, rsimagetag::cli::Commands::Version));
+}
+
+#[test]
+fn test_cli_parse_complete() {
+    let cli = Cli::parse_from(["rsimagetag", "complete", "bash"]);
+    assert!(matches!(cli.command, rsimagetag::cli::Commands::Complete { .. }));
 }

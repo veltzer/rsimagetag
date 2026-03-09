@@ -1,3 +1,5 @@
+pub mod cli;
+
 pub use eframe::egui;
 
 use std::path::{Path, PathBuf};
@@ -58,6 +60,15 @@ impl Default for MyApp {
 }
 
 impl MyApp {
+    pub fn with_dir(dir: &Path) -> Self {
+        let images = scan_images(dir);
+        Self {
+            images,
+            current_index: 0,
+            texture: None,
+        }
+    }
+
     pub fn image_count(&self) -> usize {
         self.images.len()
     }
