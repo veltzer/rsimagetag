@@ -21,7 +21,9 @@ pub enum Commands {
         dir: Option<String>,
     },
     /// Initialize the tag database at ~/.config/rsimagetag/
-    InitDb,
+    DbInit,
+    /// Dump the entire database contents as JSON
+    DbDump,
     /// Generate shell completion scripts
     Complete {
         /// The shell to generate completions for

@@ -38,7 +38,7 @@ pub fn open_db() -> Result<Database, Box<dyn std::error::Error>> {
     let path = db_path();
     if !path.exists() {
         return Err(format!(
-            "Database not found at {}. Run 'rsimagetag init-db' first.",
+            "Database not found at {}. Run 'rsimagetag db-init' first.",
             path.display()
         )
         .into());
@@ -127,6 +127,14 @@ pub fn list_all(db: &Database) -> Result<Vec<(String, Vec<String>)>, Box<dyn std
         entries.push((hash, tags));
     }
     Ok(entries)
+}
+
+/// Dump the entire database as a pretty-printed JSON string.
+pub fn dump_json() -> Result<String, Box<dyn std::error::Error>> {
+    let db = open_db()?;
+    let entries = list_all(&db)?;
+    let map: std::collections::BTreeMap<String, Vec<String>> = entries.into_iter().collect();
+    Ok(serde_json::to_string_pretty(&map)?)
 }
 
 #[cfg(test)]

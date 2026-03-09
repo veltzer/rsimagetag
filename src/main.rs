@@ -23,10 +23,20 @@ fn main() -> eframe::Result {
                 Box::new(move |_cc| Ok(Box::new(app))),
             )
         }
-        Commands::InitDb => {
+        Commands::DbInit => {
             if let Err(e) = rsimagetag::db::init_db() {
                 eprintln!("Error: {e}");
                 std::process::exit(1);
+            }
+            Ok(())
+        }
+        Commands::DbDump => {
+            match rsimagetag::db::dump_json() {
+                Ok(json) => println!("{json}"),
+                Err(e) => {
+                    eprintln!("Error: {e}");
+                    std::process::exit(1);
+                }
             }
             Ok(())
         }

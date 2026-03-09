@@ -171,9 +171,15 @@ fn test_cli_parse_complete() {
 }
 
 #[test]
-fn test_cli_parse_init_db() {
-    let cli = Cli::parse_from(["rsimagetag", "init-db"]);
-    assert!(matches!(cli.command, rsimagetag::cli::Commands::InitDb));
+fn test_cli_parse_db_init() {
+    let cli = Cli::parse_from(["rsimagetag", "db-init"]);
+    assert!(matches!(cli.command, rsimagetag::cli::Commands::DbInit));
+}
+
+#[test]
+fn test_cli_parse_db_dump() {
+    let cli = Cli::parse_from(["rsimagetag", "db-dump"]);
+    assert!(matches!(cli.command, rsimagetag::cli::Commands::DbDump));
 }
 
 #[test]

@@ -34,7 +34,7 @@ The database is an embedded [redb](https://github.com/cberner/redb) key-value st
 The database must be initialized before first use:
 
 ```bash
-rsimagetag init-db
+rsimagetag db-init
 ```
 
 This creates the `~/.config/rsimagetag/` directory and the `tags.redb` database file.

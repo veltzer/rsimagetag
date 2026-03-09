@@ -5,7 +5,7 @@
 After building rsimagetag, initialize the tag database:
 
 ```bash
-rsimagetag init-db
+rsimagetag db-init
 ```
 
 This creates `~/.config/rsimagetag/tags.redb`. You only need to do this once.
@@ -51,7 +51,8 @@ The database persists between sessions at `~/.config/rsimagetag/tags.redb`. Beca
 ## Commands
 
 ```bash
-rsimagetag init-db               # Initialize the database (first time only)
+rsimagetag db-init               # Initialize the database (first time only)
+rsimagetag db-dump               # Dump the entire database as JSON
 rsimagetag tag                    # Browse and tag images in current directory
 rsimagetag tag --dir ~/Pictures   # Browse and tag images in a specific directory
 rsimagetag version                # Print version and build info
