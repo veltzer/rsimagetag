@@ -21,7 +21,8 @@ fn main() -> eframe::Result {
             let options = eframe::NativeOptions {
                 viewport: eframe::egui::ViewportBuilder::default()
                     .with_inner_size([800.0, 600.0])
-                    .with_icon(std::sync::Arc::new(icon)),
+                    .with_icon(std::sync::Arc::new(icon))
+                    .with_app_id("rsimagetag"),
                 ..Default::default()
             };
             eframe::run_native(
