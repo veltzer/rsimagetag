@@ -35,7 +35,7 @@
             const path_to_root = "";
             const default_light_theme = "rust";
             const default_dark_theme = "ayu";
-            window.path_to_searchindex_js = "searchindex-855b818a.js";
+            window.path_to_searchindex_js = "searchindex-3faeda04.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-5866268f.js"></script>
@@ -184,16 +184,24 @@
 <p>This page collects ideas for future development of rsimagetag.</p>
 <h2 id="face-detection"><a class="header" href="#face-detection">Face Detection</a></h2>
 <p>Integrate face detection to automatically suggest people tags. When a photo is opened, the application could detect faces and either auto-tag known people or prompt the user to identify unknown faces. Libraries like OpenCV (via the <code>opencv</code> crate) or ONNX-based models could provide this functionality.</p>
-<h2 id="tag-categories"><a class="header" href="#tag-categories">Tag Categories</a></h2>
-<p>Introduce formal tag categories (people, scenes, events, locations, dates) with different UI treatments for each. People tags could show profile thumbnails, scene tags could use icons, and date tags could integrate with a calendar view.</p>
+<h2 id="additional-tag-prefixes"><a class="header" href="#additional-tag-prefixes">Additional Tag Prefixes</a></h2>
+<p>The flat string tag system is designed for extensibility via prefixes. Future tag types could include:</p>
+<ul>
+<li><code>location/...</code> — geographic locations (e.g., <code>location/paris</code>, <code>location/home</code>)</li>
+<li><code>event/...</code> — named events (e.g., <code>event/wedding-2024</code>, <code>event/birthday-bob</code>)</li>
+<li><code>date/...</code> — date tags (e.g., <code>date/2024-07</code>)</li>
+</ul>
+<p>No schema changes would be needed — just new prefix conventions and UI support.</p>
 <h2 id="bulk-import"><a class="header" href="#bulk-import">Bulk Import</a></h2>
 <p>Add support for scanning an entire directory tree and presenting untagged images for batch tagging. This would help with initial setup when importing an existing photo collection.</p>
 <h2 id="export-and-sync"><a class="header" href="#export-and-sync">Export and Sync</a></h2>
-<p>Support exporting the tag database in standard formats (JSON, CSV) and syncing it across machines. This would allow sharing tags between devices or backing up the database.</p>
+<p>Support exporting the tag database in standard formats (JSON, CSV) and syncing it across machines. The <code>db-dump</code> command already provides JSON export; a corresponding <code>db-import</code> command would enable restoring from backups or syncing between devices.</p>
 <h2 id="smart-albums"><a class="header" href="#smart-albums">Smart Albums</a></h2>
 <p>Automatically generate albums based on tag combinations. For example, “All beach photos with Alice” or “All 2024 birthday photos”. These albums would update dynamically as new photos are tagged.</p>
 <h2 id="thumbnail-cache"><a class="header" href="#thumbnail-cache">Thumbnail Cache</a></h2>
 <p>Generate and cache thumbnails for faster browsing of large photo collections. The thumbnails would be stored alongside the tag database and regenerated as needed.</p>
+<h2 id="rscontacts-json-export"><a class="header" href="#rscontacts-json-export">rscontacts JSON Export</a></h2>
+<p>Add a <code>--json</code> flag to rscontacts’ <code>list</code> command to output contacts as structured JSON with <code>resourceName</code> and display name fields. This would make the import into rsimagetag more robust than parsing the current text output.</p>
 
                     </main>
 

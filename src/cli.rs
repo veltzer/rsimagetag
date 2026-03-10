@@ -24,6 +24,11 @@ pub enum Commands {
     DbInit,
     /// Dump the entire database contents as JSON
     DbDump,
+    /// Import people from a JSON file (e.g., from `rscontacts export-json --short`)
+    DbImportPeople {
+        /// Path to the JSON file containing [{resourceName, displayName}, ...]
+        file: String,
+    },
     /// Generate shell completion scripts
     Complete {
         /// The shell to generate completions for

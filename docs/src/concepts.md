@@ -12,24 +12,63 @@ Benefits:
 
 ## Tags
 
-Tags are free-form text labels attached to an image. There are two main categories:
+Tags are **plain strings** stored in a flat list per image. The type of a tag is determined by convention:
 
 ### People Tags
 
-Tags identifying people in the photo. Examples: "Alice", "Bob", "Mom", "Dad".
+A tag that starts with `people/c` is a reference to a Google Contacts `resourceName` (e.g., `people/c1234567890`). This is the stable unique identifier that Google assigns to each contact.
 
-### Scene Tags
+Benefits of using `resourceName` instead of a display name:
 
-Tags describing the content or context of the photo. Examples: "beach", "wedding", "birthday", "vacation", "sunset".
+- **No ambiguity**: Two contacts named "Mike" have different resourceNames.
+- **Rename-safe**: If someone changes their name in Google Contacts, the tag still points to the right person — only the display name in the people lookup table needs updating.
+- **Scalable**: Works with 10 or 10,000 contacts.
 
-There is no enforced distinction between people and scene tags — they are all stored in the same tag list. The separation is purely conceptual to help you organize.
+### Scene / Free-Form Tags
+
+Any tag that does **not** start with `people/c` is a free-form tag. Use these for scenes, events, locations, dates, or anything else. Examples: `beach`, `wedding`, `birthday`, `vacation`, `2024`.
+
+### Tag Detection
+
+The application determines the tag type with a simple prefix check:
+
+```
+if tag.starts_with("people/c") → person reference → look up display name
+else                           → free-form tag    → display as-is
+```
+
+This convention is extensible — future tag types can use new prefixes (e.g., `location/...`, `event/...`) without schema changes.
 
 ## Database
 
-The database is an embedded [redb](https://github.com/cberner/redb) key-value store located at `~/.config/rsimagetag/tags.redb`.
+The database is an embedded [redb](https://github.com/cberner/redb) store located at `~/.config/rsimagetag/tags.redb`. It contains two tables:
 
-- **Key**: The SHA-256 content hash of the image (hex string)
-- **Value**: A JSON-encoded list of tags associated with that image
+### Tags Table
+
+Maps image content hashes to tag lists.
+
+| Key | Value |
+|-----|-------|
+| SHA-256 hex (64 chars) | JSON array of tag strings |
+
+Example:
+
+```json
+["people/c1234567890", "people/c9876543210", "beach", "sunset"]
+```
+
+### People Lookup Table
+
+Maps Google Contacts `resourceName` to display name. This is a lookup-only table used by the UI to show human-readable names instead of opaque IDs.
+
+| Key | Value |
+|-----|-------|
+| `people/c1234567890` | `Alice Smith` |
+| `people/c9876543210` | `Bob Jones` |
+
+This table is populated by importing contacts from rscontacts.
+
+### Initialization
 
 The database must be initialized before first use:
 
@@ -37,6 +76,6 @@ The database must be initialized before first use:
 rsimagetag db-init
 ```
 
-This creates the `~/.config/rsimagetag/` directory and the `tags.redb` database file.
+This creates the `~/.config/rsimagetag/` directory and the `tags.redb` database file with both tables.
 
 The database is ACID-compliant — tags are never lost due to crashes or power failures.

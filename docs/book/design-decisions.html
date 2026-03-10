@@ -35,7 +35,7 @@
             const path_to_root = "";
             const default_light_theme = "rust";
             const default_dark_theme = "ayu";
-            window.path_to_searchindex_js = "searchindex-855b818a.js";
+            window.path_to_searchindex_js = "searchindex-3faeda04.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-5866268f.js"></script>
@@ -199,8 +199,8 @@
 <li><strong>Active community</strong>: Well-maintained with frequent releases and good documentation.</li>
 </ul>
 <h2 id="image-identification-content-hashing"><a class="header" href="#image-identification-content-hashing">Image Identification: Content Hashing</a></h2>
-<h3 id="approach-chosen-hash-of-image-content"><a class="header" href="#approach-chosen-hash-of-image-content">Approach Chosen: Hash of Image Content</a></h3>
-<p>Each image is identified by a cryptographic hash (e.g., SHA-256) of its file content. Tags are stored against this hash.</p>
+<h3 id="approach-chosen-sha-256-hash-of-file-content"><a class="header" href="#approach-chosen-sha-256-hash-of-file-content">Approach Chosen: SHA-256 Hash of File Content</a></h3>
+<p>Each image is identified by a SHA-256 hash of its file content. Tags are stored against this hash in the database.</p>
 <h3 id="alternative-considered-file-path"><a class="header" href="#alternative-considered-file-path">Alternative Considered: File Path</a></h3>
 <p>Using the file path as the identifier would be simpler but fragile — renaming or moving a file would lose all its tags.</p>
 <h3 id="why-content-hashing"><a class="header" href="#why-content-hashing">Why Content Hashing</a></h3>
@@ -209,6 +209,53 @@
 <li><strong>Deduplication</strong>: Duplicate copies of the same image automatically share tags.</li>
 <li><strong>Trade-off</strong>: Slightly slower on first load (must read and hash each file), but hashes can be cached.</li>
 </ul>
+<h2 id="tag-database-redb"><a class="header" href="#tag-database-redb">Tag Database: redb</a></h2>
+<h3 id="approach-chosen-redb-embedded-database"><a class="header" href="#approach-chosen-redb-embedded-database">Approach Chosen: redb Embedded Database</a></h3>
+<p>rsimagetag uses <a href="https://github.com/cberner/redb">redb</a> as its embedded key-value store, located at <code>~/.config/rsimagetag/tags.redb</code>.</p>
+<h3 id="alternatives-considered-1"><a class="header" href="#alternatives-considered-1">Alternatives Considered</a></h3>
+<ul>
+<li><strong>sled</strong>: Pure Rust embedded database, but maintenance has been inconsistent and its future is uncertain.</li>
+<li><strong>SQLite via rusqlite</strong>: Battle-tested relational database, but heavier than needed for a simple key-value mapping. Adds a C dependency.</li>
+<li><strong>serde_json flat file</strong>: Simplest possible approach, but no ACID guarantees — a crash during write could corrupt the entire database.</li>
+</ul>
+<h3 id="why-redb"><a class="header" href="#why-redb">Why redb</a></h3>
+<ul>
+<li><strong>Pure Rust</strong>: No system dependencies or C libraries to link.</li>
+<li><strong>ACID-compliant</strong>: Crash-safe — tags are never lost due to power failures or unexpected termination.</li>
+<li><strong>Simple API</strong>: Perfect for key-value mappings.</li>
+<li><strong>Consistent</strong>: Already used by rscontacts, keeping the tooling consistent across projects.</li>
+<li><strong>Lightweight</strong>: Minimal overhead compared to SQLite for our use case.</li>
+</ul>
+<h2 id="tag-schema-flat-string-list-with-prefix-convention"><a class="header" href="#tag-schema-flat-string-list-with-prefix-convention">Tag Schema: Flat String List with Prefix Convention</a></h2>
+<h3 id="approach-chosen-tags-as-plain-strings"><a class="header" href="#approach-chosen-tags-as-plain-strings">Approach Chosen: Tags as Plain Strings</a></h3>
+<p>Each image’s tags are stored as a flat <code>Vec&lt;String&gt;</code>. The type of tag is determined by prefix convention:</p>
+<ul>
+<li><code>people/c...</code> → person reference (Google Contacts <code>resourceName</code>)</li>
+<li>anything else → free-form tag (scene, event, location, etc.)</li>
+</ul>
+<h3 id="alternative-considered-structured-tags-with-separate-fields"><a class="header" href="#alternative-considered-structured-tags-with-separate-fields">Alternative Considered: Structured Tags with Separate Fields</a></h3>
+<p>An earlier design used a struct with separate <code>people: Vec&lt;String&gt;</code> and <code>scenes: Vec&lt;String&gt;</code> fields per image. This was rejected in favor of the flat list.</p>
+<h3 id="why-flat-strings"><a class="header" href="#why-flat-strings">Why Flat Strings</a></h3>
+<ul>
+<li><strong>Simpler code</strong>: One <code>add_tag</code>/<code>remove_tag</code> function instead of two of everything.</li>
+<li><strong>More flexible</strong>: Adding a new tag type (e.g., <code>location/...</code>, <code>event/...</code>) requires zero schema changes — just use a new prefix.</li>
+<li><strong>Simpler JSON</strong>: <code>["people/c123", "beach"]</code> instead of <code>{"people": [...], "scenes": [...]}</code>.</li>
+<li><strong>No performance difference</strong>: A typical image has 5-20 tags. The <code>starts_with("people/c")</code> check is negligible.</li>
+<li><strong>The people lookup table handles display</strong>: The people table (<code>resourceName → display_name</code>) is a separate lookup table, not part of the tag schema.</li>
+</ul>
+<h2 id="people-identification-google-contacts-resourcename"><a class="header" href="#people-identification-google-contacts-resourcename">People Identification: Google Contacts resourceName</a></h2>
+<h3 id="approach-chosen-reference-by-resourcename"><a class="header" href="#approach-chosen-reference-by-resourcename">Approach Chosen: Reference by <code>resourceName</code></a></h3>
+<p>People in photos are identified by their Google Contacts <code>resourceName</code> (e.g., <code>people/c1234567890</code>), not by display name.</p>
+<h3 id="alternative-considered-display-name-strings"><a class="header" href="#alternative-considered-display-name-strings">Alternative Considered: Display Name Strings</a></h3>
+<p>Using display names like <code>"Alice Smith"</code> would be simpler but creates problems with duplicate names and name changes.</p>
+<h3 id="why-resourcename"><a class="header" href="#why-resourcename">Why resourceName</a></h3>
+<ul>
+<li><strong>Unique</strong>: Google guarantees each contact has a unique <code>resourceName</code>. Two contacts named “Mike” have different resourceNames.</li>
+<li><strong>Stable</strong>: The <code>resourceName</code> does not change when a contact’s name is updated. If “Bob Smith” changes to “Robert Smith”, all photo tags still reference the same person.</li>
+<li><strong>Scalable</strong>: Works equally well with 10 contacts or 10,000.</li>
+<li><strong>Integration</strong>: Importing from rscontacts (which uses the Google People API) naturally provides resourceNames.</li>
+</ul>
+<p>The display name is stored separately in the people lookup table and resolved at display time.</p>
 
                     </main>
 

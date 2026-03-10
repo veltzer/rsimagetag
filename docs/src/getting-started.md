@@ -8,7 +8,17 @@ After building rsimagetag, initialize the tag database:
 rsimagetag db-init
 ```
 
-This creates `~/.config/rsimagetag/tags.redb`. You only need to do this once.
+This creates `~/.config/rsimagetag/tags.redb` with the tags and people lookup tables. You only need to do this once.
+
+## Importing People from Google Contacts
+
+Import your contacts so you can tag people in photos by name:
+
+```bash
+rsimagetag db-import-rscontacts
+```
+
+This requires [rscontacts](https://github.com/veltzer/rscontacts) to be installed and authenticated. The import populates the people lookup table with `resourceName → display_name` entries.
 
 ## Launching the Application
 
@@ -27,26 +37,42 @@ rsimagetag tag --dir ~/Pictures
 ## Basic Workflow
 
 1. **Navigate** through images using the Prev/Next buttons or keyboard shortcuts (Arrow keys, N/P).
-2. **Add tags** to each image — tag people by name and scenes by description.
+2. **Add tags** to each image — select people from the imported contacts list, or type scene tags.
 3. Tags are automatically saved to the database.
 
-## Searching
+## How Tags Work
 
-Use the search functionality to find all photos matching a specific tag. For example:
+Tags are plain strings stored in a flat list per image:
 
-- Search for "Alice" to find all photos where Alice appears.
-- Search for "beach" to find all beach photos.
-- Combine tags to narrow results.
-
-## Database
-
-Tags are stored locally as a mapping of image content hashes to tag lists:
-
-```
-SHA-256(image) -> ["Alice", "Bob", "beach", "2024"]
+```json
+["people/c1234567890", "people/c9876543210", "beach", "sunset"]
 ```
 
-The database persists between sessions at `~/.config/rsimagetag/tags.redb`. Because it uses content hashes, your tags remain valid even if you rename or move your photo files.
+- Tags starting with `people/c` reference a Google Contact — the UI shows the display name from the people lookup table.
+- All other tags are free-form (scenes, events, locations, etc.).
+
+## Inspecting the Database
+
+Dump the full database as JSON:
+
+```bash
+rsimagetag db-dump
+```
+
+Output:
+
+```json
+{
+  "people": {
+    "people/c1234567890": "Alice Smith",
+    "people/c9876543210": "Bob Jones"
+  },
+  "image_tags": {
+    "a1b2c3...": ["people/c1234567890", "beach"],
+    "d4e5f6...": ["people/c9876543210", "sunset"]
+  }
+}
+```
 
 ## Commands
 

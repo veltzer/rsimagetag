@@ -35,7 +35,7 @@
             const path_to_root = "";
             const default_light_theme = "rust";
             const default_dark_theme = "ayu";
-            window.path_to_searchindex_js = "searchindex-855b818a.js";
+            window.path_to_searchindex_js = "searchindex-3faeda04.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-5866268f.js"></script>
@@ -185,14 +185,15 @@
 <h2 id="features"><a class="header" href="#features">Features</a></h2>
 <ul>
 <li><strong>Browse photos</strong> in a native GUI built with egui</li>
-<li><strong>Tag people</strong> in each photo (e.g., “Alice”, “Bob”)</li>
-<li><strong>Tag scenes</strong> with descriptive labels (e.g., “beach”, “wedding”, “birthday”)</li>
-<li><strong>Content-based identification</strong> using image hashes — tags survive file renames and moves</li>
-<li><strong>Persistent database</strong> mapping image hashes to tag lists</li>
+<li><strong>Tag people</strong> using Google Contacts <code>resourceName</code> references — no ambiguity with duplicate names</li>
+<li><strong>Tag scenes</strong> with free-form labels (e.g., “beach”, “wedding”, “birthday”)</li>
+<li><strong>Content-based identification</strong> using SHA-256 image hashes — tags survive file renames and moves</li>
+<li><strong>Persistent ACID database</strong> powered by redb at <code>~/.config/rsimagetag/tags.redb</code></li>
+<li><strong>Import people</strong> from Google Contacts via rscontacts</li>
 <li><strong>Search by tag</strong> to find all photos of a specific person or scene</li>
 </ul>
 <h2 id="how-it-works"><a class="header" href="#how-it-works">How It Works</a></h2>
-<p>rsimagetag computes a hash of each image’s content and stores tags against that hash. This means:</p>
+<p>rsimagetag computes a SHA-256 hash of each image’s content and stores tags against that hash. Tags are plain strings — if a tag starts with <code>people/c</code> it references a Google Contact, otherwise it is a free-form tag (scene, event, location, etc.).</p>
 <ul>
 <li>Renaming a file does not lose its tags.</li>
 <li>Moving a file to a different folder does not lose its tags.</li>
@@ -201,8 +202,10 @@
 <h2 id="technology"><a class="header" href="#technology">Technology</a></h2>
 <ul>
 <li>Built with Rust using <a href="https://github.com/emilk/egui">eframe/egui</a> for the GUI</li>
-<li>Image hashing for content-based identification</li>
-<li>Local database for tag storage</li>
+<li><a href="https://github.com/cberner/redb">redb</a> embedded database for ACID-safe tag storage</li>
+<li>SHA-256 (<a href="https://crates.io/crates/sha2">sha2</a>) for content-based image identification</li>
+<li><a href="https://crates.io/crates/clap">clap</a> for CLI</li>
+<li>Integration with <a href="https://github.com/veltzer/rscontacts">rscontacts</a> for people import</li>
 </ul>
 
                     </main>

@@ -40,6 +40,16 @@ fn main() -> eframe::Result {
             }
             Ok(())
         }
+        Commands::DbImportPeople { file } => {
+            match rsimagetag::db::import_people_from_file(&PathBuf::from(&file)) {
+                Ok(count) => println!("Imported {count} people."),
+                Err(e) => {
+                    eprintln!("Error: {e}");
+                    std::process::exit(1);
+                }
+            }
+            Ok(())
+        }
         Commands::Complete { shell } => {
             print_completions(shell);
             Ok(())

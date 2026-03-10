@@ -52,15 +52,46 @@ rsimagetag uses [redb](https://github.com/cberner/redb) as its embedded key-valu
 
 - **Pure Rust**: No system dependencies or C libraries to link.
 - **ACID-compliant**: Crash-safe — tags are never lost due to power failures or unexpected termination.
-- **Simple API**: Perfect for a key-value mapping of `hash -> tags`.
+- **Simple API**: Perfect for key-value mappings.
 - **Consistent**: Already used by rscontacts, keeping the tooling consistent across projects.
 - **Lightweight**: Minimal overhead compared to SQLite for our use case.
 
-### Schema
+## Tag Schema: Flat String List with Prefix Convention
 
-The database has a single table (`tags`) with:
+### Approach Chosen: Tags as Plain Strings
 
-- **Key**: SHA-256 hex string (64 characters)
-- **Value**: JSON-encoded array of tag strings (e.g., `["Alice","Bob","beach"]`)
+Each image's tags are stored as a flat `Vec<String>`. The type of tag is determined by prefix convention:
 
-JSON encoding for the value keeps the schema simple while allowing variable-length tag lists without a secondary index or join table.
+- `people/c...` → person reference (Google Contacts `resourceName`)
+- anything else → free-form tag (scene, event, location, etc.)
+
+### Alternative Considered: Structured Tags with Separate Fields
+
+An earlier design used a struct with separate `people: Vec<String>` and `scenes: Vec<String>` fields per image. This was rejected in favor of the flat list.
+
+### Why Flat Strings
+
+- **Simpler code**: One `add_tag`/`remove_tag` function instead of two of everything.
+- **More flexible**: Adding a new tag type (e.g., `location/...`, `event/...`) requires zero schema changes — just use a new prefix.
+- **Simpler JSON**: `["people/c123", "beach"]` instead of `{"people": [...], "scenes": [...]}`.
+- **No performance difference**: A typical image has 5-20 tags. The `starts_with("people/c")` check is negligible.
+- **The people lookup table handles display**: The people table (`resourceName → display_name`) is a separate lookup table, not part of the tag schema.
+
+## People Identification: Google Contacts resourceName
+
+### Approach Chosen: Reference by `resourceName`
+
+People in photos are identified by their Google Contacts `resourceName` (e.g., `people/c1234567890`), not by display name.
+
+### Alternative Considered: Display Name Strings
+
+Using display names like `"Alice Smith"` would be simpler but creates problems with duplicate names and name changes.
+
+### Why resourceName
+
+- **Unique**: Google guarantees each contact has a unique `resourceName`. Two contacts named "Mike" have different resourceNames.
+- **Stable**: The `resourceName` does not change when a contact's name is updated. If "Bob Smith" changes to "Robert Smith", all photo tags still reference the same person.
+- **Scalable**: Works equally well with 10 contacts or 10,000.
+- **Integration**: Importing from rscontacts (which uses the Google People API) naturally provides resourceNames.
+
+The display name is stored separately in the people lookup table and resolved at display time.
