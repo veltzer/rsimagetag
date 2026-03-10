@@ -47,6 +47,7 @@ pub struct MyApp {
     pub images: Vec<PathBuf>,
     pub current_index: usize,
     pub texture: Option<egui::TextureHandle>,
+    pub trash_error: Option<String>,
 }
 
 impl Default for MyApp {
@@ -57,6 +58,7 @@ impl Default for MyApp {
             images,
             current_index: 0,
             texture: None,
+            trash_error: None,
         }
     }
 }
@@ -68,6 +70,7 @@ impl MyApp {
             images,
             current_index: 0,
             texture: None,
+            trash_error: None,
         }
     }
 
@@ -97,6 +100,27 @@ impl MyApp {
         }
     }
 
+    /// Move the current image to ~/Trash/rsimagetag/, creating the directory if needed.
+    pub fn trash_current(&mut self) -> Result<(), String> {
+        let Some(path) = self.images.get(self.current_index).cloned() else {
+            return Err("No image to trash".into());
+        };
+        let home = dirs::home_dir().ok_or("Could not determine home directory")?;
+        let trash_dir = home.join("Trash/rsimagetag");
+        std::fs::create_dir_all(&trash_dir).map_err(|e| format!("Failed to create trash directory: {e}"))?;
+        let file_name = path.file_name().ok_or("File has no name")?;
+        let dest = trash_dir.join(file_name);
+        std::fs::rename(&path, &dest).map_err(|e| format!("Failed to move file: {e}"))?;
+        self.images.remove(self.current_index);
+        if self.images.is_empty() {
+            self.current_index = 0;
+        } else if self.current_index >= self.images.len() {
+            self.current_index = self.images.len() - 1;
+        }
+        self.texture = None;
+        Ok(())
+    }
+
     fn load_current_texture(&mut self, ctx: &egui::Context) {
         if self.texture.is_none() {
             if let Some(path) = self.images.get(self.current_index) {
@@ -111,6 +135,7 @@ impl eframe::App for MyApp {
         self.load_current_texture(ctx);
 
         // Handle keyboard navigation
+        let mut do_trash = false;
         ctx.input(|i| {
             if i.key_pressed(egui::Key::ArrowRight) || i.key_pressed(egui::Key::N) {
                 self.go_next();
@@ -120,7 +145,16 @@ impl eframe::App for MyApp {
                 self.go_prev();
                 self.load_current_texture(ctx);
             }
+            if i.key_pressed(egui::Key::Delete) {
+                do_trash = true;
+            }
         });
+        if do_trash {
+            if let Err(e) = self.trash_current() {
+                self.trash_error = Some(e);
+            }
+            self.load_current_texture(ctx);
+        }
 
         egui::TopBottomPanel::top("top_bar").show(ctx, |ui| {
             ui.horizontal(|ui| {
@@ -131,6 +165,16 @@ impl eframe::App for MyApp {
                 if ui.button("Next >>").clicked() {
                     self.go_next();
                     self.load_current_texture(ctx);
+                }
+                ui.separator();
+                if ui.button("Trash").clicked() {
+                    if let Err(e) = self.trash_current() {
+                        self.trash_error = Some(e);
+                    }
+                    self.load_current_texture(ctx);
+                }
+                if let Some(err) = &self.trash_error {
+                    ui.colored_label(egui::Color32::RED, err.as_str());
                 }
                 ui.separator();
                 if self.images.is_empty() {
