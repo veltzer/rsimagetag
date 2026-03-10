@@ -35,6 +35,8 @@ pub enum Commands {
         #[arg(value_enum)]
         shell: Shell,
     },
+    /// Install .desktop file and icon for KDE/GNOME taskbar integration
+    InstallDesktop,
     /// Print version information
     Version,
 }

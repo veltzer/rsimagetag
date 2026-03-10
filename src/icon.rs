@@ -90,3 +90,68 @@ pub fn generate_icon() -> (Vec<u8>, u32, u32) {
 
     (pixels, SIZE, SIZE)
 }
+
+/// Generate the icon as PNG bytes in memory.
+fn generate_icon_png() -> Result<Vec<u8>, Box<dyn std::error::Error>> {
+    let (pixels, w, h) = generate_icon();
+    let img = image::RgbaImage::from_raw(w, h, pixels)
+        .ok_or("failed to create image from icon pixels")?;
+    let mut buf = std::io::Cursor::new(Vec::new());
+    img.write_to(&mut buf, image::ImageFormat::Png)?;
+    Ok(buf.into_inner())
+}
+
+/// Generate the .desktop file contents.
+fn generate_desktop_contents() -> Result<String, Box<dyn std::error::Error>> {
+    let exe = std::env::current_exe()?;
+    Ok(format!(
+        "[Desktop Entry]\n\
+         Type=Application\n\
+         Name=rsimagetag\n\
+         Comment=Photo tagging and organization tool\n\
+         Exec={} tag\n\
+         Icon=rsimagetag\n\
+         Terminal=false\n\
+         Categories=Graphics;Photography;\n\
+         StartupWMClass=rsimagetag\n",
+        exe.display()
+    ))
+}
+
+/// Compare new content against an existing file and install if needed.
+/// Returns a status message describing what happened.
+fn install_file(path: &std::path::Path, new_contents: &[u8], label: &str) -> Result<(), Box<dyn std::error::Error>> {
+    if path.exists() {
+        let existing = std::fs::read(path)?;
+        if existing == new_contents {
+            println!("{label}: already up to date at {}", path.display());
+        } else {
+            std::fs::write(path, new_contents)?;
+            println!("{label}: updated at {}", path.display());
+        }
+    } else {
+        if let Some(parent) = path.parent() {
+            std::fs::create_dir_all(parent)?;
+        }
+        std::fs::write(path, new_contents)?;
+        println!("{label}: installed to {}", path.display());
+    }
+    Ok(())
+}
+
+/// Install a .desktop file and icon for KDE/GNOME taskbar integration.
+/// - Icon: ~/.local/share/icons/hicolor/64x64/apps/rsimagetag.png
+/// - Desktop: ~/.local/share/applications/rsimagetag.desktop
+pub fn install_desktop() -> Result<(), Box<dyn std::error::Error>> {
+    let data_dir = dirs::data_dir().ok_or("could not determine data directory")?;
+
+    let icon_png = generate_icon_png()?;
+    let icon_path = data_dir.join("icons/hicolor/64x64/apps/rsimagetag.png");
+    install_file(&icon_path, &icon_png, "Icon")?;
+
+    let desktop_contents = generate_desktop_contents()?;
+    let desktop_path = data_dir.join("applications/rsimagetag.desktop");
+    install_file(&desktop_path, desktop_contents.as_bytes(), "Desktop file")?;
+
+    Ok(())
+}

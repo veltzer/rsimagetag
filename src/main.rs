@@ -61,6 +61,13 @@ fn main() -> eframe::Result {
             print_completions(shell);
             Ok(())
         }
+        Commands::InstallDesktop => {
+            if let Err(e) = rsimagetag::icon::install_desktop() {
+                eprintln!("Error: {e}");
+                std::process::exit(1);
+            }
+            Ok(())
+        }
         Commands::Version => {
             println!("rsimagetag {} by {}", env!("CARGO_PKG_VERSION"), env!("CARGO_PKG_AUTHORS"));
             println!("GIT_DESCRIBE: {}", env!("GIT_DESCRIBE"));
