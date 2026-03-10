@@ -49,13 +49,18 @@ pub fn generate_icon() -> (Vec<u8>, u32, u32) {
     (pixels, SIZE, SIZE)
 }
 
-/// Generate the icon as PNG bytes in memory.
-fn generate_icon_png() -> Result<Vec<u8>, Box<dyn std::error::Error>> {
+/// Generate the icon as PNG bytes at a given size.
+fn generate_icon_png_at_size(size: u32) -> Result<Vec<u8>, Box<dyn std::error::Error>> {
     let (pixels, w, h) = generate_icon();
     let img = image::RgbaImage::from_raw(w, h, pixels)
         .ok_or("failed to create image from icon pixels")?;
+    let resized = if size != w {
+        image::imageops::resize(&img, size, size, image::imageops::FilterType::Lanczos3)
+    } else {
+        img
+    };
     let mut buf = std::io::Cursor::new(Vec::new());
-    img.write_to(&mut buf, image::ImageFormat::Png)?;
+    resized.write_to(&mut buf, image::ImageFormat::Png)?;
     Ok(buf.into_inner())
 }
 
@@ -103,13 +108,26 @@ fn install_file(path: &std::path::Path, new_contents: &[u8], label: &str) -> Res
 pub fn install_desktop() -> Result<(), Box<dyn std::error::Error>> {
     let data_dir = dirs::data_dir().ok_or("could not determine data directory")?;
 
-    let icon_png = generate_icon_png()?;
-    let icon_path = data_dir.join("icons/hicolor/64x64/apps/rsimagetag.png");
-    install_file(&icon_path, &icon_png, "Icon")?;
+    // Install icon at multiple sizes for proper desktop integration
+    for size in [64, 128, 256] {
+        let icon_png = generate_icon_png_at_size(size)?;
+        let icon_path = data_dir.join(format!("icons/hicolor/{size}x{size}/apps/rsimagetag.png"));
+        install_file(&icon_path, &icon_png, &format!("Icon {size}x{size}"))?;
+    }
 
     let desktop_contents = generate_desktop_contents()?;
     let desktop_path = data_dir.join("applications/rsimagetag.desktop");
     install_file(&desktop_path, desktop_contents.as_bytes(), "Desktop file")?;
+
+    // Copy hicolor index.theme if missing, then update icon cache
+    let index_path = data_dir.join("icons/hicolor/index.theme");
+    if !index_path.exists() {
+        let system_index = std::path::Path::new("/usr/share/icons/hicolor/index.theme");
+        if system_index.exists() {
+            std::fs::copy(system_index, &index_path)?;
+            println!("Icon theme index: copied to {}", index_path.display());
+        }
+    }
 
     Ok(())
 }
