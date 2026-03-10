@@ -12,9 +12,16 @@ fn main() -> eframe::Result {
                 Some(d) => MyApp::with_dir(&PathBuf::from(d)),
                 None => MyApp::default(),
             };
+            let (icon_rgba, icon_w, icon_h) = rsimagetag::icon::generate_icon();
+            let icon = eframe::egui::IconData {
+                rgba: icon_rgba,
+                width: icon_w,
+                height: icon_h,
+            };
             let options = eframe::NativeOptions {
                 viewport: eframe::egui::ViewportBuilder::default()
-                    .with_inner_size([800.0, 600.0]),
+                    .with_inner_size([800.0, 600.0])
+                    .with_icon(std::sync::Arc::new(icon)),
                 ..Default::default()
             };
             eframe::run_native(
