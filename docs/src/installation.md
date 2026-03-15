@@ -4,6 +4,14 @@
 
 - Rust toolchain (edition 2024)
 
+## Install from crates.io
+
+```bash
+cargo install rsimagetag
+```
+
+This downloads, compiles, and installs the latest published version into `~/.cargo/bin/`.
+
 ## Building from Source
 
 ```bash
