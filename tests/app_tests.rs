@@ -86,6 +86,7 @@ fn test_navigation_empty() {
         images: vec![],
         current_index: 0,
         texture: None,
+        trash_error: None,
     };
     app.go_next();
     assert_eq!(app.current_index, 0);
@@ -99,6 +100,7 @@ fn test_navigation_wraps() {
         images: vec!["a.jpg".into(), "b.jpg".into(), "c.jpg".into()],
         current_index: 0,
         texture: None,
+        trash_error: None,
     };
     // next wraps around
     app.go_next();
@@ -118,6 +120,7 @@ fn test_current_path() {
         images: vec!["a.jpg".into(), "b.jpg".into()],
         current_index: 1,
         texture: None,
+        trash_error: None,
     };
     assert_eq!(app.current_path().unwrap(), Path::new("b.jpg"));
 }
@@ -128,6 +131,7 @@ fn test_current_path_empty() {
         images: vec![],
         current_index: 0,
         texture: None,
+        trash_error: None,
     };
     assert!(app.current_path().is_none());
 }
