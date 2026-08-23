@@ -7,3 +7,4 @@
 - [Concepts](concepts.md)
 - [Design Decisions](design-decisions.md)
 - [Future Ideas](future-ideas.md)
+- [Release Info](release-info.md)

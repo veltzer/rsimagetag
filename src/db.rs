@@ -209,10 +209,11 @@ pub fn remove_tag(
     Ok(())
 }
 
+/// All image tag entries: (image_sha256_hex, tags) pairs.
+pub type ImageTagEntries = Vec<(String, Vec<String>)>;
+
 /// List all image tag entries: returns (hash, tags) pairs.
-pub fn list_all_tags(
-    db: &Database,
-) -> Result<Vec<(String, Vec<String>)>, Box<dyn std::error::Error>> {
+pub fn list_all_tags(db: &Database) -> Result<ImageTagEntries, Box<dyn std::error::Error>> {
     let txn = db.begin_read()?;
     let table = txn.open_table(TAGS_TABLE)?;
     let mut entries = Vec::new();

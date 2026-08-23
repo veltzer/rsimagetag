@@ -32,8 +32,8 @@ pub fn generate_icon() -> (Vec<u8>, u32, u32) {
         for dy in -2i32..=2 {
             for dx in -2i32..=2 {
                 if dx * dx + dy * dy <= 5 {
-                    let px = (cx as i32 + dx) as u32;
-                    let py = (cy as i32 + dy) as u32;
+                    let px = (cx + dx) as u32;
+                    let py = (cy + dy) as u32;
                     set(&mut pixels, px, py, tr, tg, tb);
                 }
             }

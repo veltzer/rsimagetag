@@ -122,10 +122,10 @@ impl MyApp {
     }
 
     fn load_current_texture(&mut self, ctx: &egui::Context) {
-        if self.texture.is_none() {
-            if let Some(path) = self.images.get(self.current_index) {
-                self.texture = load_image_as_texture(ctx, path);
-            }
+        if self.texture.is_none()
+            && let Some(path) = self.images.get(self.current_index)
+        {
+            self.texture = load_image_as_texture(ctx, path);
         }
     }
 }
