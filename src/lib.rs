@@ -7,9 +7,7 @@ pub use eframe::egui;
 use std::path::{Path, PathBuf};
 use walkdir::WalkDir;
 
-const IMAGE_EXTENSIONS: &[&str] = &[
-    "jpg", "jpeg", "png", "gif", "bmp", "tiff", "tif", "webp",
-];
+const IMAGE_EXTENSIONS: &[&str] = &["jpg", "jpeg", "png", "gif", "bmp", "tiff", "tif", "webp"];
 
 pub fn scan_images(dir: &Path) -> Vec<PathBuf> {
     let mut images: Vec<PathBuf> = WalkDir::new(dir)
@@ -28,10 +26,7 @@ pub fn scan_images(dir: &Path) -> Vec<PathBuf> {
     images
 }
 
-fn load_image_as_texture(
-    ctx: &egui::Context,
-    path: &Path,
-) -> Option<egui::TextureHandle> {
+fn load_image_as_texture(ctx: &egui::Context, path: &Path) -> Option<egui::TextureHandle> {
     let img = image::open(path).ok()?.into_rgba8();
     let size = [img.width() as usize, img.height() as usize];
     let pixels = img.into_raw();
@@ -107,7 +102,8 @@ impl MyApp {
         };
         let home = dirs::home_dir().ok_or("Could not determine home directory")?;
         let trash_dir = home.join("Trash/rsimagetag");
-        std::fs::create_dir_all(&trash_dir).map_err(|e| format!("Failed to create trash directory: {e}"))?;
+        std::fs::create_dir_all(&trash_dir)
+            .map_err(|e| format!("Failed to create trash directory: {e}"))?;
         let file_name = path.file_name().ok_or("File has no name")?;
         let dest = trash_dir.join(file_name);
         std::fs::rename(&path, &dest).map_err(|e| format!("Failed to move file: {e}"))?;
@@ -131,19 +127,20 @@ impl MyApp {
 }
 
 impl eframe::App for MyApp {
-    fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
-        self.load_current_texture(ctx);
+    fn ui(&mut self, ui: &mut egui::Ui, _frame: &mut eframe::Frame) {
+        let ctx = ui.ctx().clone();
+        self.load_current_texture(&ctx);
 
         // Handle keyboard navigation
         let mut do_trash = false;
         ctx.input(|i| {
             if i.key_pressed(egui::Key::ArrowRight) || i.key_pressed(egui::Key::N) {
                 self.go_next();
-                self.load_current_texture(ctx);
+                self.load_current_texture(&ctx);
             }
             if i.key_pressed(egui::Key::ArrowLeft) || i.key_pressed(egui::Key::P) {
                 self.go_prev();
-                self.load_current_texture(ctx);
+                self.load_current_texture(&ctx);
             }
             if i.key_pressed(egui::Key::Delete) {
                 do_trash = true;
@@ -153,25 +150,25 @@ impl eframe::App for MyApp {
             if let Err(e) = self.trash_current() {
                 self.trash_error = Some(e);
             }
-            self.load_current_texture(ctx);
+            self.load_current_texture(&ctx);
         }
 
-        egui::TopBottomPanel::top("top_bar").show(ctx, |ui| {
+        egui::Panel::top("top_bar").show(ui, |ui| {
             ui.horizontal(|ui| {
                 if ui.button("<< Prev").clicked() {
                     self.go_prev();
-                    self.load_current_texture(ctx);
+                    self.load_current_texture(&ctx);
                 }
                 if ui.button("Next >>").clicked() {
                     self.go_next();
-                    self.load_current_texture(ctx);
+                    self.load_current_texture(&ctx);
                 }
                 ui.separator();
                 if ui.button("Trash").clicked() {
                     if let Err(e) = self.trash_current() {
                         self.trash_error = Some(e);
                     }
-                    self.load_current_texture(ctx);
+                    self.load_current_texture(&ctx);
                 }
                 if let Some(err) = &self.trash_error {
                     ui.colored_label(egui::Color32::RED, err.as_str());
@@ -193,18 +190,22 @@ impl eframe::App for MyApp {
             });
         });
 
-        egui::CentralPanel::default().show(ctx, |ui| {
+        egui::CentralPanel::default().show(ui, |ui| {
             if let Some(texture) = &self.texture {
                 let available = ui.available_size();
                 let img_size = texture.size_vec2();
-                let scale = (available.x / img_size.x).min(available.y / img_size.y).min(1.0);
+                let scale = (available.x / img_size.x)
+                    .min(available.y / img_size.y)
+                    .min(1.0);
                 let display_size = img_size * scale;
                 ui.centered_and_justified(|ui| {
                     ui.image(egui::load::SizedTexture::new(texture.id(), display_size));
                 });
             } else if self.images.is_empty() {
                 ui.centered_and_justified(|ui| {
-                    ui.heading("No images found.\nRun rsimagetag from a directory containing images.");
+                    ui.heading(
+                        "No images found.\nRun rsimagetag from a directory containing images.",
+                    );
                 });
             } else {
                 ui.centered_and_justified(|ui| {

@@ -89,10 +89,7 @@ pub fn add_person(
 }
 
 /// Remove a person from the people lookup table.
-pub fn remove_person(
-    db: &Database,
-    resource_name: &str,
-) -> Result<(), Box<dyn std::error::Error>> {
+pub fn remove_person(db: &Database, resource_name: &str) -> Result<(), Box<dyn std::error::Error>> {
     let txn = db.begin_write()?;
     {
         let mut table = txn.open_table(PEOPLE_TABLE)?;
@@ -113,9 +110,7 @@ pub fn get_person(
 }
 
 /// List all people: returns (resourceName, display_name) pairs, sorted by resourceName.
-pub fn list_people(
-    db: &Database,
-) -> Result<Vec<(String, String)>, Box<dyn std::error::Error>> {
+pub fn list_people(db: &Database) -> Result<Vec<(String, String)>, Box<dyn std::error::Error>> {
     let txn = db.begin_read()?;
     let table = txn.open_table(PEOPLE_TABLE)?;
     let mut entries = Vec::new();
@@ -181,11 +176,7 @@ pub fn set_tags(
 }
 
 /// Add a tag to an image. Does nothing if the tag already exists.
-pub fn add_tag(
-    db: &Database,
-    hash: &str,
-    tag: &str,
-) -> Result<(), Box<dyn std::error::Error>> {
+pub fn add_tag(db: &Database, hash: &str, tag: &str) -> Result<(), Box<dyn std::error::Error>> {
     let mut tags = get_tags(db, hash)?;
     if !tags.iter().any(|t| t == tag) {
         tags.push(tag.to_owned());
@@ -195,11 +186,7 @@ pub fn add_tag(
 }
 
 /// Remove a tag from an image. Does nothing if the tag doesn't exist.
-pub fn remove_tag(
-    db: &Database,
-    hash: &str,
-    tag: &str,
-) -> Result<(), Box<dyn std::error::Error>> {
+pub fn remove_tag(db: &Database, hash: &str, tag: &str) -> Result<(), Box<dyn std::error::Error>> {
     let mut tags = get_tags(db, hash)?;
     let len_before = tags.len();
     tags.retain(|t| t != tag);
@@ -268,10 +255,7 @@ pub fn dump_json() -> Result<String, Box<dyn std::error::Error>> {
     let db = open_db()?;
     let people: BTreeMap<String, String> = list_people(&db)?.into_iter().collect();
     let image_tags: BTreeMap<String, Vec<String>> = list_all_tags(&db)?.into_iter().collect();
-    let dump = DbDump {
-        people,
-        image_tags,
-    };
+    let dump = DbDump { people, image_tags };
     Ok(serde_json::to_string_pretty(&dump)?)
 }
 
@@ -402,7 +386,12 @@ mod tests {
     #[test]
     fn test_remove_tag() {
         let db = create_test_db("remove_tag");
-        set_tags(&db, "hash1", &["people/c1".into(), "beach".into(), "sunset".into()]).unwrap();
+        set_tags(
+            &db,
+            "hash1",
+            &["people/c1".into(), "beach".into(), "sunset".into()],
+        )
+        .unwrap();
         remove_tag(&db, "hash1", "beach").unwrap();
         let tags = get_tags(&db, "hash1").unwrap();
         assert_eq!(tags, vec!["people/c1", "sunset"]);
@@ -433,7 +422,10 @@ mod tests {
         let path = std::env::temp_dir().join("rsimagetag_test_hashfile.txt");
         fs::write(&path, b"hello world").unwrap();
         let h = hash_file(&path).unwrap();
-        assert_eq!(h, "b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9");
+        assert_eq!(
+            h,
+            "b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9"
+        );
         fs::remove_file(&path).ok();
     }
 }

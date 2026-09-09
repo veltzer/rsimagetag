@@ -14,13 +14,14 @@ pub fn generate_icon() -> (Vec<u8>, u32, u32) {
         }
     };
 
-    let fill_rect = |pixels: &mut Vec<u8>, x0: u32, y0: u32, x1: u32, y1: u32, r: u8, g: u8, b: u8| {
-        for y in y0..y1.min(SIZE) {
-            for x in x0..x1.min(SIZE) {
-                set(pixels, x, y, r, g, b);
+    let fill_rect =
+        |pixels: &mut Vec<u8>, x0: u32, y0: u32, x1: u32, y1: u32, r: u8, g: u8, b: u8| {
+            for y in y0..y1.min(SIZE) {
+                for x in x0..x1.min(SIZE) {
+                    set(pixels, x, y, r, g, b);
+                }
             }
-        }
-    };
+        };
 
     // Background: teal rounded rectangle
     let (tr, tg, tb) = (0x00u8, 0x96u8, 0x88u8); // teal-600
@@ -83,7 +84,11 @@ fn generate_desktop_contents() -> Result<String, Box<dyn std::error::Error>> {
 
 /// Compare new content against an existing file and install if needed.
 /// Returns a status message describing what happened.
-fn install_file(path: &std::path::Path, new_contents: &[u8], label: &str) -> Result<(), Box<dyn std::error::Error>> {
+fn install_file(
+    path: &std::path::Path,
+    new_contents: &[u8],
+    label: &str,
+) -> Result<(), Box<dyn std::error::Error>> {
     if path.exists() {
         let existing = std::fs::read(path)?;
         if existing == new_contents {

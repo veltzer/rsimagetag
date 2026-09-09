@@ -1,6 +1,6 @@
 use clap::Parser;
-use rsimagetag::cli::{Cli, Commands, print_completions};
 use rsimagetag::MyApp;
+use rsimagetag::cli::{Cli, Commands, print_completions};
 use std::path::PathBuf;
 
 fn main() -> eframe::Result {
@@ -70,7 +70,11 @@ fn main() -> eframe::Result {
             Ok(())
         }
         Commands::Version => {
-            println!("rsimagetag {} by {}", env!("CARGO_PKG_VERSION"), env!("CARGO_PKG_AUTHORS"));
+            println!(
+                "rsimagetag {} by {}",
+                env!("CARGO_PKG_VERSION"),
+                env!("CARGO_PKG_AUTHORS")
+            );
             println!("GIT_DESCRIBE: {}", env!("GIT_DESCRIBE"));
             println!("GIT_SHA: {}", env!("GIT_SHA"));
             println!("GIT_BRANCH: {}", env!("GIT_BRANCH"));

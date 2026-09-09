@@ -1,8 +1,8 @@
-use std::path::Path;
 use clap::Parser;
-use rsimagetag::{scan_images, MyApp};
 use rsimagetag::cli::Cli;
 use rsimagetag::db;
+use rsimagetag::{MyApp, scan_images};
+use std::path::Path;
 
 #[test]
 fn test_scan_images_empty_dir() {
@@ -22,7 +22,11 @@ fn test_scan_images_finds_images() {
     std::fs::write(dir.join("notes.txt"), b"not an image").unwrap();
     let images = scan_images(&dir);
     assert_eq!(images.len(), 2);
-    assert!(images.iter().all(|p| p.extension().is_some_and(|e| e == "jpg" || e == "png")));
+    assert!(
+        images
+            .iter()
+            .all(|p| p.extension().is_some_and(|e| e == "jpg" || e == "png"))
+    );
     std::fs::remove_dir_all(&dir).ok();
 }
 
@@ -57,7 +61,10 @@ fn test_scan_images_sorted() {
     std::fs::write(dir.join("a.jpg"), b"fake").unwrap();
     std::fs::write(dir.join("b.jpg"), b"fake").unwrap();
     let images = scan_images(&dir);
-    let names: Vec<&str> = images.iter().map(|p| p.file_name().unwrap().to_str().unwrap()).collect();
+    let names: Vec<&str> = images
+        .iter()
+        .map(|p| p.file_name().unwrap().to_str().unwrap())
+        .collect();
     assert_eq!(names, vec!["a.jpg", "b.jpg", "c.jpg"]);
     std::fs::remove_dir_all(&dir).ok();
 }
@@ -149,7 +156,10 @@ fn test_with_dir() {
 #[test]
 fn test_cli_parse_tag() {
     let cli = Cli::parse_from(["rsimagetag", "tag"]);
-    assert!(matches!(cli.command, rsimagetag::cli::Commands::Tag { dir: None }));
+    assert!(matches!(
+        cli.command,
+        rsimagetag::cli::Commands::Tag { dir: None }
+    ));
 }
 
 #[test]
@@ -171,7 +181,10 @@ fn test_cli_parse_version() {
 #[test]
 fn test_cli_parse_complete() {
     let cli = Cli::parse_from(["rsimagetag", "complete", "bash"]);
-    assert!(matches!(cli.command, rsimagetag::cli::Commands::Complete { .. }));
+    assert!(matches!(
+        cli.command,
+        rsimagetag::cli::Commands::Complete { .. }
+    ));
 }
 
 #[test]
