@@ -10,7 +10,7 @@ repository = "https://github.com/veltzer/rsimagetag"
 [dependencies]
 clap = { version = "4.5", features = ["derive"] }
 clap_complete = "4.5"
-dirs = "6"
+dirs = "7"
 eframe = { version = "0.36", features = ["default"] }
 hex = "0.4"
 image = { version = "0.25", default-features = false, features = ["png", "jpeg", "gif", "bmp", "tiff", "webp"] }
