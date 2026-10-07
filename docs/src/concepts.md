@@ -32,7 +32,7 @@ Any tag that does **not** start with `people/c` is a free-form tag. Use these fo
 
 The application determines the tag type with a simple prefix check:
 
-```
+```text
 if tag.starts_with("people/c") → person reference → look up display name
 else                           → free-form tag    → display as-is
 ```
