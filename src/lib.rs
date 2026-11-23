@@ -72,7 +72,7 @@ impl MyApp {
     }
 
     #[must_use]
-    pub fn image_count(&self) -> usize {
+    pub const fn image_count(&self) -> usize {
         self.images.len()
     }
 

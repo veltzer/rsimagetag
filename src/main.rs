@@ -8,10 +8,7 @@ fn main() -> eframe::Result {
 
     match cli.command {
         Commands::Tag { dir } => {
-            let app = match dir {
-                Some(d) => MyApp::with_dir(&PathBuf::from(d)),
-                None => MyApp::default(),
-            };
+            let app = dir.map_or_else(MyApp::default, |d| MyApp::with_dir(&PathBuf::from(d)));
             let (icon_rgba, icon_w, icon_h) = rsimagetag::icon::generate_icon();
             let icon = eframe::egui::IconData {
                 rgba: icon_rgba,
