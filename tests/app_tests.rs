@@ -9,7 +9,7 @@ fn test_scan_images_empty_dir() {
     let dir = std::env::temp_dir().join("rsimagetag_test_empty");
     std::fs::create_dir_all(&dir).unwrap();
     let images = scan_images(&dir);
-    assert!(images.is_empty());
+    assert_eq!(images, [] as [std::path::PathBuf; 0]);
     std::fs::remove_dir_all(&dir).ok();
 }
 
@@ -72,7 +72,7 @@ fn test_scan_images_sorted() {
 #[test]
 fn test_nonexistent_dir() {
     let images = scan_images(Path::new("/tmp/rsimagetag_nonexistent_dir_12345"));
-    assert!(images.is_empty());
+    assert_eq!(images, [] as [std::path::PathBuf; 0]);
 }
 
 #[test]

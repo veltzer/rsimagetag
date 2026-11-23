@@ -5,16 +5,20 @@ use std::collections::BTreeMap;
 use std::fs;
 use std::path::{Path, PathBuf};
 
-/// Image tags table: image_sha256_hex -> JSON-encoded Vec<String>
+/// Image tags table: `image_sha256_hex` -> JSON-encoded Vec<String>
 /// Tags are plain strings. If a tag starts with "people/c" it references
 /// a Google Contact resourceName; otherwise it is a free-form tag (scene, event, etc.).
 const TAGS_TABLE: TableDefinition<&str, &str> = TableDefinition::new("tags");
 
-/// People lookup table: resourceName (e.g. "people/c1234567890") -> display_name
+/// People lookup table: resourceName (e.g. "people/c1234567890") -> `display_name`
 /// Used to resolve people tags to human-readable names for the UI.
 const PEOPLE_TABLE: TableDefinition<&str, &str> = TableDefinition::new("people");
 
 /// Return the config directory: ~/.config/rsimagetag/
+///
+/// # Panics
+/// Panics if the platform has no config directory.
+#[must_use]
 pub fn config_dir() -> PathBuf {
     dirs::config_dir()
         .expect("could not determine config directory")
@@ -22,16 +26,21 @@ pub fn config_dir() -> PathBuf {
 }
 
 /// Return the database file path: ~/.config/rsimagetag/tags.redb
+#[must_use]
 pub fn db_path() -> PathBuf {
     config_dir().join("tags.redb")
 }
 
 /// Check whether a tag string is a people reference.
+#[must_use]
 pub fn is_person_tag(tag: &str) -> bool {
     tag.starts_with("people/c")
 }
 
 /// Initialize the database: create config dir and database file with all tables.
+///
+/// # Errors
+/// Returns an error if the database cannot be opened or a transaction fails.
 pub fn init_db() -> Result<(), Box<dyn std::error::Error>> {
     let dir = config_dir();
     fs::create_dir_all(&dir)?;
@@ -48,6 +57,9 @@ pub fn init_db() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 /// Open the existing database. Returns an error if it doesn't exist.
+///
+/// # Errors
+/// Returns an error if the database cannot be opened or a transaction fails.
 pub fn open_db() -> Result<Database, Box<dyn std::error::Error>> {
     let path = db_path();
     if !path.exists() {
@@ -61,6 +73,9 @@ pub fn open_db() -> Result<Database, Box<dyn std::error::Error>> {
 }
 
 /// Compute SHA-256 hash of a file's contents, returned as a hex string.
+///
+/// # Errors
+/// Returns an error if the database cannot be opened or a transaction fails.
 pub fn hash_file(path: &Path) -> Result<String, Box<dyn std::error::Error>> {
     let data = fs::read(path)?;
     let mut hasher = Sha256::new();
@@ -74,6 +89,9 @@ pub fn hash_file(path: &Path) -> Result<String, Box<dyn std::error::Error>> {
 // ---------------------------------------------------------------------------
 
 /// Add a person to the people lookup table.
+///
+/// # Errors
+/// Returns an error if the database cannot be opened or a transaction fails.
 pub fn add_person(
     db: &Database,
     resource_name: &str,
@@ -89,6 +107,9 @@ pub fn add_person(
 }
 
 /// Remove a person from the people lookup table.
+///
+/// # Errors
+/// Returns an error if the database cannot be opened or a transaction fails.
 pub fn remove_person(db: &Database, resource_name: &str) -> Result<(), Box<dyn std::error::Error>> {
     let txn = db.begin_write()?;
     {
@@ -100,6 +121,9 @@ pub fn remove_person(db: &Database, resource_name: &str) -> Result<(), Box<dyn s
 }
 
 /// Get the display name for a person by resourceName.
+///
+/// # Errors
+/// Returns an error if the database cannot be opened or a transaction fails.
 pub fn get_person(
     db: &Database,
     resource_name: &str,
@@ -109,7 +133,10 @@ pub fn get_person(
     Ok(table.get(resource_name)?.map(|v| v.value().to_owned()))
 }
 
-/// List all people: returns (resourceName, display_name) pairs, sorted by resourceName.
+/// List all people: returns (resourceName, `display_name`) pairs, sorted by resourceName.
+///
+/// # Errors
+/// Returns an error if the database cannot be opened or a transaction fails.
 pub fn list_people(db: &Database) -> Result<Vec<(String, String)>, Box<dyn std::error::Error>> {
     let txn = db.begin_read()?;
     let table = txn.open_table(PEOPLE_TABLE)?;
@@ -124,6 +151,9 @@ pub fn list_people(db: &Database) -> Result<Vec<(String, String)>, Box<dyn std::
 }
 
 /// Import multiple people at once (batch insert in a single transaction).
+///
+/// # Errors
+/// Returns an error if the database cannot be opened or a transaction fails.
 pub fn import_people(
     db: &Database,
     people: &[(String, String)],
@@ -146,6 +176,9 @@ pub fn import_people(
 // ---------------------------------------------------------------------------
 
 /// Get tags for an image hash. Returns empty vec if not found.
+///
+/// # Errors
+/// Returns an error if the database cannot be opened or a transaction fails.
 pub fn get_tags(db: &Database, hash: &str) -> Result<Vec<String>, Box<dyn std::error::Error>> {
     let txn = db.begin_read()?;
     let table = txn.open_table(TAGS_TABLE)?;
@@ -160,6 +193,9 @@ pub fn get_tags(db: &Database, hash: &str) -> Result<Vec<String>, Box<dyn std::e
 }
 
 /// Set tags for an image hash.
+///
+/// # Errors
+/// Returns an error if the database cannot be opened or a transaction fails.
 pub fn set_tags(
     db: &Database,
     hash: &str,
@@ -176,6 +212,9 @@ pub fn set_tags(
 }
 
 /// Add a tag to an image. Does nothing if the tag already exists.
+///
+/// # Errors
+/// Returns an error if the database cannot be opened or a transaction fails.
 pub fn add_tag(db: &Database, hash: &str, tag: &str) -> Result<(), Box<dyn std::error::Error>> {
     let mut tags = get_tags(db, hash)?;
     if !tags.iter().any(|t| t == tag) {
@@ -186,6 +225,9 @@ pub fn add_tag(db: &Database, hash: &str, tag: &str) -> Result<(), Box<dyn std::
 }
 
 /// Remove a tag from an image. Does nothing if the tag doesn't exist.
+///
+/// # Errors
+/// Returns an error if the database cannot be opened or a transaction fails.
 pub fn remove_tag(db: &Database, hash: &str, tag: &str) -> Result<(), Box<dyn std::error::Error>> {
     let mut tags = get_tags(db, hash)?;
     let len_before = tags.len();
@@ -196,10 +238,13 @@ pub fn remove_tag(db: &Database, hash: &str, tag: &str) -> Result<(), Box<dyn st
     Ok(())
 }
 
-/// All image tag entries: (image_sha256_hex, tags) pairs.
+/// All image tag entries: (`image_sha256_hex`, tags) pairs.
 pub type ImageTagEntries = Vec<(String, Vec<String>)>;
 
 /// List all image tag entries: returns (hash, tags) pairs.
+///
+/// # Errors
+/// Returns an error if the database cannot be opened or a transaction fails.
 pub fn list_all_tags(db: &Database) -> Result<ImageTagEntries, Box<dyn std::error::Error>> {
     let txn = db.begin_read()?;
     let table = txn.open_table(TAGS_TABLE)?;
@@ -228,6 +273,9 @@ pub struct ContactEntry {
 
 /// Import people from a JSON file (rscontacts export-json --short format).
 /// Returns the number of people imported.
+///
+/// # Errors
+/// Returns an error if the database cannot be opened or a transaction fails.
 pub fn import_people_from_file(path: &Path) -> Result<usize, Box<dyn std::error::Error>> {
     let data = fs::read_to_string(path)?;
     let entries: Vec<ContactEntry> = serde_json::from_str(&data)?;
@@ -251,6 +299,9 @@ pub struct DbDump {
 }
 
 /// Dump the entire database as a pretty-printed JSON string.
+///
+/// # Errors
+/// Returns an error if the database cannot be opened or a transaction fails.
 pub fn dump_json() -> Result<String, Box<dyn std::error::Error>> {
     let db = open_db()?;
     let people: BTreeMap<String, String> = list_people(&db)?.into_iter().collect();
@@ -361,7 +412,7 @@ mod tests {
     fn test_get_tags_empty() {
         let db = create_test_db("get_tags_empty");
         let tags = get_tags(&db, "abc123").unwrap();
-        assert!(tags.is_empty());
+        assert_eq!(tags, [] as [std::string::String; 0]);
     }
 
     #[test]

@@ -1,5 +1,6 @@
 /// Generate a 64x64 RGBA icon programmatically.
 /// Design: white "T" on a teal rounded-rectangle background.
+#[must_use]
 pub fn generate_icon() -> (Vec<u8>, u32, u32) {
     const SIZE: u32 = 64;
     let mut pixels = vec![0u8; (SIZE * SIZE * 4) as usize];
@@ -33,8 +34,8 @@ pub fn generate_icon() -> (Vec<u8>, u32, u32) {
         for dy in -2i32..=2 {
             for dx in -2i32..=2 {
                 if dx * dx + dy * dy <= 5 {
-                    let px = (cx + dx) as u32;
-                    let py = (cy + dy) as u32;
+                    let px = (cx + dx).cast_unsigned();
+                    let py = (cy + dy).cast_unsigned();
                     set(&mut pixels, px, py, tr, tg, tb);
                 }
             }
@@ -55,10 +56,10 @@ fn generate_icon_png_at_size(size: u32) -> Result<Vec<u8>, Box<dyn std::error::E
     let (pixels, w, h) = generate_icon();
     let img = image::RgbaImage::from_raw(w, h, pixels)
         .ok_or("failed to create image from icon pixels")?;
-    let resized = if size != w {
-        image::imageops::resize(&img, size, size, image::imageops::FilterType::Lanczos3)
-    } else {
+    let resized = if size == w {
         img
+    } else {
+        image::imageops::resize(&img, size, size, image::imageops::FilterType::Lanczos3)
     };
     let mut buf = std::io::Cursor::new(Vec::new());
     resized.write_to(&mut buf, image::ImageFormat::Png)?;
@@ -110,6 +111,9 @@ fn install_file(
 /// Install a .desktop file and icon for KDE/GNOME taskbar integration.
 /// - Icon: ~/.local/share/icons/hicolor/64x64/apps/rsimagetag.png
 /// - Desktop: ~/.local/share/applications/rsimagetag.desktop
+///
+/// # Errors
+/// Returns an error if a directory or file cannot be created or written.
 pub fn install_desktop() -> Result<(), Box<dyn std::error::Error>> {
     let data_dir = dirs::data_dir().ok_or("could not determine data directory")?;
 

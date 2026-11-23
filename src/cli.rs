@@ -42,6 +42,7 @@ pub enum Commands {
 }
 
 /// Parse a shell name string into a Shell enum
+#[must_use]
 pub fn parse_shell(name: &str) -> Option<Shell> {
     <Shell as FromStr>::from_str(name).ok()
 }

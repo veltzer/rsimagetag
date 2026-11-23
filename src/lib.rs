@@ -9,10 +9,11 @@ use walkdir::WalkDir;
 
 const IMAGE_EXTENSIONS: &[&str] = &["jpg", "jpeg", "png", "gif", "bmp", "tiff", "tif", "webp"];
 
+#[must_use]
 pub fn scan_images(dir: &Path) -> Vec<PathBuf> {
     let mut images: Vec<PathBuf> = WalkDir::new(dir)
         .into_iter()
-        .filter_map(|e| e.ok())
+        .filter_map(std::result::Result::ok)
         .filter(|e| e.file_type().is_file())
         .filter(|e| {
             e.path()
@@ -59,6 +60,7 @@ impl Default for MyApp {
 }
 
 impl MyApp {
+    #[must_use]
     pub fn with_dir(dir: &Path) -> Self {
         let images = scan_images(dir);
         Self {
@@ -69,12 +71,16 @@ impl MyApp {
         }
     }
 
+    #[must_use]
     pub fn image_count(&self) -> usize {
         self.images.len()
     }
 
+    #[must_use]
     pub fn current_path(&self) -> Option<&Path> {
-        self.images.get(self.current_index).map(|p| p.as_path())
+        self.images
+            .get(self.current_index)
+            .map(std::path::PathBuf::as_path)
     }
 
     pub fn go_next(&mut self) {
@@ -96,6 +102,9 @@ impl MyApp {
     }
 
     /// Move the current image to ~/Trash/rsimagetag/, creating the directory if needed.
+    ///
+    /// # Errors
+    /// Returns an error if the image cannot be moved to the trash.
     pub fn trash_current(&mut self) -> Result<(), String> {
         let Some(path) = self.images.get(self.current_index).cloned() else {
             return Err("No image to trash".into());
