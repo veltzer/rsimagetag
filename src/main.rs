@@ -1,3 +1,5 @@
+//! rsimagetag: Tag images easily.
+
 use clap::Parser;
 use rsimagetag::MyApp;
 use rsimagetag::cli::{Cli, Commands, print_completions};

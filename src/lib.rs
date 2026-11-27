@@ -1,7 +1,13 @@
+//! Library half of rsimagetag: what the binary and the integration tests share.
+
+/// The command line: its subcommands and shell completions.
 pub mod cli;
+/// The tag database: people, and the tags of each image.
 pub mod db;
+/// The application icon and the desktop entry that shows it.
 pub mod icon;
 
+/// The GUI toolkit, re-exported so tests name the same version the app uses.
 pub use eframe::egui;
 
 use std::path::{Path, PathBuf};
@@ -9,6 +15,7 @@ use walkdir::WalkDir;
 
 const IMAGE_EXTENSIONS: &[&str] = &["jpg", "jpeg", "png", "gif", "bmp", "tiff", "tif", "webp"];
 
+/// Every image file under `dir`, recursively, sorted by path.
 #[must_use]
 pub fn scan_images(dir: &Path) -> Vec<PathBuf> {
     let mut images: Vec<PathBuf> = WalkDir::new(dir)
@@ -39,10 +46,15 @@ fn load_image_as_texture(ctx: &egui::Context, path: &Path) -> Option<egui::Textu
     ))
 }
 
+/// The tagging window: the images found and which one is on screen.
 pub struct MyApp {
+    /// The images found, sorted by path.
     pub images: Vec<PathBuf>,
+    /// Index into `images` of the one on screen.
     pub current_index: usize,
+    /// The image on screen, once loaded; `None` makes the next frame load it.
     pub texture: Option<egui::TextureHandle>,
+    /// Why the last attempt to trash an image failed, shown until dismissed.
     pub trash_error: Option<String>,
 }
 
@@ -60,6 +72,7 @@ impl Default for MyApp {
 }
 
 impl MyApp {
+    /// An app showing the images under `dir`.
     #[must_use]
     pub fn with_dir(dir: &Path) -> Self {
         let images = scan_images(dir);
@@ -71,11 +84,13 @@ impl MyApp {
         }
     }
 
+    /// How many images were found.
     #[must_use]
     pub const fn image_count(&self) -> usize {
         self.images.len()
     }
 
+    /// The path of the image on screen, or `None` when there are no images.
     #[must_use]
     pub fn current_path(&self) -> Option<&Path> {
         self.images
@@ -83,6 +98,7 @@ impl MyApp {
             .map(std::path::PathBuf::as_path)
     }
 
+    /// Show the next image, wrapping around after the last.
     pub fn go_next(&mut self) {
         if !self.images.is_empty() {
             self.current_index = (self.current_index + 1) % self.images.len();
@@ -90,6 +106,7 @@ impl MyApp {
         }
     }
 
+    /// Show the previous image, wrapping around before the first.
     pub fn go_prev(&mut self) {
         if !self.images.is_empty() {
             self.current_index = if self.current_index == 0 {

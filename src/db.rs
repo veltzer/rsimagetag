@@ -267,7 +267,9 @@ pub fn list_all_tags(db: &Database) -> Result<ImageTagEntries, Box<dyn std::erro
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ContactEntry {
+    /// The contact's Google resource name, e.g. `people/c1234567890`.
     pub resource_name: String,
+    /// The contact's name as shown in the UI.
     pub display_name: String,
 }
 
@@ -294,7 +296,9 @@ pub fn import_people_from_file(path: &Path) -> Result<usize, Box<dyn std::error:
 /// Full database dump structure for JSON export.
 #[derive(Debug, Serialize)]
 pub struct DbDump {
+    /// Every known person: resource name to display name.
     pub people: BTreeMap<String, String>,
+    /// Every tagged image: the SHA-256 of its content, in hex, to its tags.
     pub image_tags: BTreeMap<String, Vec<String>>,
 }
 

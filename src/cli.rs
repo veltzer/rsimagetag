@@ -3,15 +3,18 @@ use clap_complete::{Shell, generate};
 use std::io;
 use std::str::FromStr;
 
+/// The command line of rsimagetag.
 #[derive(Parser)]
 #[command(name = "rsimagetag")]
 #[command(version = concat!(env!("CARGO_PKG_VERSION")))]
 #[command(about = "Photo tagging and organization tool", long_about = None)]
 pub struct Cli {
+    /// The subcommand to run.
     #[command(subcommand)]
     pub command: Commands,
 }
 
+/// The subcommands of rsimagetag.
 #[derive(Subcommand)]
 pub enum Commands {
     /// Launch the GUI to browse and tag images in the current directory
