@@ -5,7 +5,7 @@ use std::collections::BTreeMap;
 use std::fs;
 use std::path::{Path, PathBuf};
 
-/// Image tags table: `image_sha256_hex` -> JSON-encoded Vec<String>
+/// Image tags table: `image_sha256_hex` -> JSON-encoded `Vec<String>`
 /// Tags are plain strings. If a tag starts with "people/c" it references
 /// a Google Contact resourceName; otherwise it is a free-form tag (scene, event, etc.).
 const TAGS_TABLE: TableDefinition<&str, &str> = TableDefinition::new("tags");
