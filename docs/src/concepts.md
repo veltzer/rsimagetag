@@ -48,7 +48,7 @@ The database is an embedded [redb](https://github.com/cberner/redb) store locate
 Maps image content hashes to tag lists.
 
 | Key | Value |
-|-----|-------|
+| ----- | ------- |
 | SHA-256 hex (64 chars) | JSON array of tag strings |
 
 Example:
@@ -62,7 +62,7 @@ Example:
 Maps Google Contacts `resourceName` to display name. This is a lookup-only table used by the UI to show human-readable names instead of opaque IDs.
 
 | Key | Value |
-|-----|-------|
+| ----- | ------- |
 | `people/c1234567890` | `Alice Smith` |
 | `people/c9876543210` | `Bob Jones` |
 
