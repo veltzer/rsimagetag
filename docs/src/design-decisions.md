@@ -6,7 +6,7 @@
 
 rsimagetag uses [egui](https://github.com/emilk/egui) as its GUI framework, running via the eframe integration.
 
-### Alternatives Considered
+### Alternatives Considered for the GUI Framework
 
 - **gtk4-rs**: Native Linux look and feel, but adds a system dependency on GTK4 libraries.
 - **Qt via cxx-qt**: Mature and feature-rich, but the Rust bindings add significant complexity.
@@ -42,7 +42,7 @@ Using the file path as the identifier would be simpler but fragile — renaming 
 
 rsimagetag uses [redb](https://github.com/cberner/redb) as its embedded key-value store, located at `~/.config/rsimagetag/tags.redb`.
 
-### Alternatives Considered
+### Alternatives Considered for the Tag Database
 
 - **sled**: Pure Rust embedded database, but maintenance has been inconsistent and its future is uncertain.
 - **SQLite via rusqlite**: Battle-tested relational database, but heavier than needed for a simple key-value mapping. Adds a C dependency.
